@@ -1,0 +1,22 @@
+{
+  "name": "TCO Tracker",
+  "short_name": "TCO",
+  "description": "Vehicle Total Cost of Ownership Tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f4",
+  "theme_color": "#1c69d4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Ccircle cx='96' cy='96' r='96' fill='%231c69d4'/%3E%3Ccircle cx='96' cy='96' r='80' fill='white'/%3E%3Cpath d='M96 16 A80 80 0 0 0 16 96 L96 96 Z' fill='%231c69d4'/%3E%3Cpath d='M96 176 A80 80 0 0 0 176 96 L96 96 Z' fill='%231c69d4'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Ccircle cx='256' cy='256' r='256' fill='%231c69d4'/%3E%3Ccircle cx='256' cy='256' r='210' fill='white'/%3E%3Cpath d='M256 46 A210 210 0 0 0 46 256 L256 256 Z' fill='%231c69d4'/%3E%3Cpath d='M256 466 A210 210 0 0 0 466 256 L256 256 Z' fill='%231c69d4'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

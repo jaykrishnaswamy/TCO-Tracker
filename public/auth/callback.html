@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Signing in...</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+body{font-family:-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f5f5f4;color:#1c1c1a}
+.msg{text-align:center;font-size:15px;color:#6b6b68}
+.spinner{width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:#1c69d4;border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="msg">
+  <div class="spinner"></div>
+  Signing you in...
+</div>
+<script>
+const SUPABASE_URL = 'https://zmlwcswvjbfayzjjcywz.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ovKoCEQA_7nVYA13Hs1BVA_MtyoZQvx';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    window.location.href = '/';
+  } else if (event === 'SIGNED_OUT') {
+    window.location.href = '/login.html';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "vehicle-tco-tracker",
+  "version": "1.0.0",
+  "description": "Vehicle Total Cost of Ownership tracker with AI receipt scanning",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.1",
+    "adm-zip": "^0.5.17",
+    "dotenv": "^17.4.0",
+    "express": "^4.18.2",
+    "multer": "^2.1.1",
+    "sharp": "^0.34.5"
+  }
+}
