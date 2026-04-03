@@ -1524,19 +1524,6 @@ async function initApp(session){
   await loadFromSupabase();
   fetchUsage();
 
-  // Auto-add Subaru if only BMW exists
-  const hasBMW=garage.some(v=>(v.vehicle.make||'').toLowerCase().includes('bmw'));
-  const hasSubaru=garage.some(v=>(v.vehicle.make||'').toLowerCase().includes('subaru'));
-  garage=garage.filter((v,i)=>i===0||v.vehicle.make||v.vehicle.year);
-  if(hasBMW&&!hasSubaru){
-    garage.push({
-      id:'v_subaru_1',
-      vehicle:{year:'2019',make:'Subaru',model:'Outback',trim:'3.6R Touring',
-        plate:'',price:'',pdate:'2019-01-01',podo:'0',codo:'84000',mval:'',photo:''},
-      fuel:[],maintenance:[],fixed:[],consumables:[]
-    });
-  }
-
   renderGarage();
   updateHeader();updateMetrics();renderFuel();renderMaint();renderFixed();renderAlerts();renderConsumables();
   restoreSetupForm();
