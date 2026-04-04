@@ -547,8 +547,18 @@ async function processReceiptFile(file,section){
     const prompts={
       fuel:`Parse this gas station receipt. Return ONLY a JSON object, no markdown, no explanation:
 {"date":"YYYY-MM-DD or null","gallons":number_or_null,"price_per_gallon":number_or_null,"total":number_or_null,"station":"name or null","odometer":number_or_null}`,
-      maint:`Parse this vehicle service or repair receipt. Return ONLY a JSON object, no markdown, no explanation:
-{"date":"YYYY-MM-DD or null","total":number_or_null,"service_type":"one of: Oil change|Tire rotation|Brake service|Air filter|Tire replacement|Battery|Transmission service|Coolant flush|Repair|Upgrade / Accessory|Other","shop":"name or null","odometer":number_or_null,"notes":"brief work description or null","recommendations":["array of advisor-recommended or suggested future services found on receipt, empty array if none"]}`,
+      maint:`You are an expert at reading vehicle service receipts. Extract data carefully and return ONLY a valid JSON object with no markdown, no explanation.
+
+CRITICAL RULES:
+- date: Use the INVOICE DATE. BMW 228i was manufactured 2015, so valid dates are 2015-2026. Format: YYYY-MM-DD or null.
+- total: The TOTAL INVOICE AMOUNT actually paid. NOT subtotals or estimates. If warranty/free service return 0.
+- odometer: The MILEAGE IN field in the receipt header. A 5-digit number 1000-90000. Do NOT use invoice numbers or part numbers. Return null if unclear.
+- shop: Business name at top of receipt.
+- service_type: Best match from: Oil change|Tire rotation|Brake service|Air filter|Tire replacement|Battery|Transmission service|Coolant flush|Repair|Upgrade / Accessory|Other
+- notes: 1-2 sentence summary of work performed.
+- recommendations: Future services the advisor recommended, empty array if none.
+
+{"date":"YYYY-MM-DD or null","total":number_or_null,"service_type":"string","shop":"string or null","odometer":number_or_null,"notes":"string or null","recommendations":[]}`,
       fixed:`Parse this vehicle-related bill (insurance, registration, parking, etc). Return ONLY a JSON object, no markdown, no explanation:
 {"date":"YYYY-MM-DD or null","total":number_or_null,"category":"one of: Insurance|Registration / DMV|Loan payment|Parking permit|Tolls|Car wash|Accessories|Other","notes":"issuer or description or null"}`
     };
@@ -967,8 +977,19 @@ async function runBulkImport(files){
   const total = imageFiles.length;
   let done = 0;
 
-  const prompt = `You are parsing a vehicle maintenance or service receipt. Return ONLY a JSON object, no markdown, no explanation:
-{"date":"YYYY-MM-DD or null","total":number_or_null,"service_type":"one of: Oil change|Tire rotation|Brake service|Air filter|Tire replacement|Battery|Transmission service|Coolant flush|Repair|Upgrade / Accessory|Other","shop":"name or null","odometer":number_or_null,"notes":"brief work description or null","recommendations":["any advisor-recommended future services, empty array if none"]}`;
+  const prompt = `You are an expert at reading vehicle service receipts, including upside-down, rotated, or partially obscured ones. Extract data carefully and return ONLY a valid JSON object with no markdown, no explanation.
+
+CRITICAL RULES:
+- date: Use the INVOICE DATE or service date. Must be a real calendar date. BMW 228i was manufactured in 2015 so valid dates are 2015-present. Never return dates before 2014 or after 2026. Format: YYYY-MM-DD or null.
+- total: The TOTAL INVOICE AMOUNT actually paid. NOT subtotals, NOT estimates, NOT individual line items. Look for "TOTAL INVOICE $", "TOTAL DUE", "AMOUNT PAID". If the receipt shows $0 or WARRANTY, return 0.
+- odometer: The vehicle MILEAGE IN field on the receipt header. This is a 5-digit number between 1000-90000 for this car. Do NOT use invoice numbers, part numbers, job numbers, bar codes, or any other number. If no clear mileage is shown, return null.
+- shop: The business name at the top of the receipt.
+- service_type: Choose the BEST match: "Oil change"|"Tire rotation"|"Brake service"|"Air filter"|"Tire replacement"|"Battery"|"Transmission service"|"Coolant flush"|"Repair"|"Upgrade / Accessory"|"Other"
+- notes: 1-2 sentence summary of work actually performed.
+- recommendations: Array of future services the advisor recommended, empty array if none.
+
+Return format:
+{"date":"YYYY-MM-DD or null","total":number_or_null,"service_type":"string","shop":"string or null","odometer":number_or_null,"notes":"string or null","recommendations":[]}`;
 
   // Step 2: scan in batches of 3 to avoid rate limits
   const BATCH = 3;
