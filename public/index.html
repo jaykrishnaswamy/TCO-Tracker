@@ -1526,19 +1526,17 @@ async function initApp(session){
   restoreSetupForm();
 }
 
-// Check auth on load
-sb.auth.getSession().then(({data:{session}})=>{
-  if(session){
+// Single auth init — use onAuthStateChange only to avoid double calls
+let appInitialized=false;
+sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT'){window.location.href='/login.html';return;}
+  if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&!appInitialized){
+    appInitialized=true;
     initApp(session);
-  } else {
+  }
+  if(!session&&event==='INITIAL_SESSION'){
     window.location.href='/login.html';
   }
-});
-
-// Listen for auth changes
-sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT') window.location.href='/login.html';
-  if(event==='SIGNED_IN'&&session&&!currentSession) initApp(session);
 });
 </script>
 </body>
