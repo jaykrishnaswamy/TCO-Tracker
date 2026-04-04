@@ -1410,6 +1410,8 @@ async function loadFromSupabase(){
       });
     }
     currentVid=garage[0]?.id||null;
+    // Update cache with clean Supabase data
+    try{localStorage.setItem('tco_garage_cache',JSON.stringify({garage,currentVid}));}catch(e){}
   }catch(e){
     console.error('Load error:',e);
     // Fall back to cache
@@ -1512,15 +1514,10 @@ async function initApp(session){
   currentSession=session;
   setUserAvatar(session.user);
 
-  // Load from cache immediately for fast render
-  loadState();
-  renderGarage();
-  updateHeader();updateMetrics();renderFuel();renderMaint();renderFixed();renderAlerts();renderConsumables();
-  restoreSetupForm();
   const today=new Date().toISOString().split('T')[0];
   ['f-date','mn-date','fx-date','cs-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
 
-  // Then load fresh data from Supabase in background
+  // Always load fresh from Supabase to avoid duplicates from stale cache
   await loadFromSupabase();
   fetchUsage();
 
