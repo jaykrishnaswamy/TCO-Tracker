@@ -796,8 +796,10 @@ function actionBtns(arr,id){
 function renderFuel(){
   const el=document.getElementById('fuel-list');
   if(!state.fuel.length){el.innerHTML='<div class="empty">No fill-ups logged yet.</div>';return;}
-  const sorted=[...state.fuel].reverse();
-  const dividerIdx=sorted.findIndex(e=>e.prior);
+  const currentF=[...state.fuel].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const priorF=[...state.fuel].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const sorted=[...currentF,...priorF];
+  const dividerIdx=priorF.length>0?currentF.length:-1;
   const rows=sorted.map((e,i)=>{
     let mpg='';if(i>0){const m=e.odo-sorted[i-1].odo;if(m>0&&e.gal>0)mpg=fmtN(m/e.gal)+' MPG';}
     const editing=editingId.fuel===e.id?'style="background:var(--bg-warning)"':'';
@@ -812,8 +814,10 @@ function renderFuel(){
 function renderMaint(){
   const el=document.getElementById('maint-list');
   if(!state.maintenance.length){el.innerHTML='<div class="empty">No maintenance logged yet.</div>';return;}
-  const sorted=[...state.maintenance].reverse();
-  const dividerIdx=sorted.findIndex(e=>e.prior);
+  const current=[...state.maintenance].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const prior=[...state.maintenance].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const sorted=[...current,...prior];
+  const dividerIdx=prior.length>0?current.length:-1;
   const rows=sorted.map((e,i)=>{
     const editing=editingId.maintenance===e.id?'style="background:var(--bg-warning)"':'';
     const priorBadgeM=e.prior?'<span style="font-size:10px;padding:1px 6px;border-radius:999px;background:var(--bg-secondary);color:var(--text-secondary);margin-left:4px">prior</span>':'';
@@ -829,8 +833,10 @@ function renderMaint(){
 function renderFixed(){
   const el=document.getElementById('fixed-list');
   if(!state.fixed.length){el.innerHTML='<div class="empty">No fixed costs logged yet.</div>';return;}
-  const sorted=[...state.fixed].reverse();
-  const dividerIdx=sorted.findIndex(e=>e.prior);
+  const currentFx=[...state.fixed].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const priorFx=[...state.fixed].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const sorted=[...currentFx,...priorFx];
+  const dividerIdx=priorFx.length>0?currentFx.length:-1;
   const rows=sorted.map((e,i)=>{
     const editing=editingId.fixed===e.id?'style="background:var(--bg-warning)"':'';
     const priorBadgeFx=e.prior?'<span style="font-size:10px;padding:1px 6px;border-radius:999px;background:var(--bg-secondary);color:var(--text-secondary);margin-left:4px">prior</span>':'';
