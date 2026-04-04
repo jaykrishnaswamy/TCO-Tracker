@@ -374,7 +374,7 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
       ondragover="handleDragOver(event,'import-drop')"
       ondragleave="handleDragLeave('import-drop')"
       ondrop="handleImportDrop(event)">
-      <input type="file" id="import-file" accept="image/*,application/pdf,.zip" multiple onchange="handleImportSelect(event)">
+      <input type="file" id="import-file" accept=".zip,.jpg,.jpeg,.png,.webp,.pdf,image/*,application/zip,application/x-zip-compressed" multiple onchange="handleImportSelect(event)">
       <span class="rz-icon">📂</span>
       <div class="rz-text"><strong>Drop receipts or a zip file here</strong> — or click to browse<br><span style="font-size:11px">Select multiple files at once · JPG, PNG, PDF, or a ZIP of images</span></div>
     </div>
