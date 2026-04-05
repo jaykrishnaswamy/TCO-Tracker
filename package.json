@@ -4,7 +4,8 @@
   "description": "Vehicle Total Cost of Ownership tracker with AI receipt scanning",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "npm install --include=optional"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
@@ -13,5 +14,8 @@
     "express": "^4.18.2",
     "multer": "^2.1.1",
     "sharp": "^0.34.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
