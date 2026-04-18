@@ -1334,6 +1334,11 @@ async function apiFetch(path,opts={}){
 }
 
 async function signOut(){
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('tco_'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
   await sb.auth.signOut();
   window.location.href='/login.html';
 }
@@ -1556,7 +1561,11 @@ async function initApp(session){
 // Single auth init — use onAuthStateChange only to avoid double calls
 let appInitialized=false;
 sb.auth.onAuthStateChange((event,session)=>{
-  if(event==='SIGNED_OUT'){window.location.href='/login.html';return;}
+  if(event==='SIGNED_OUT'){
+    try { Object.keys(localStorage).filter(k=>k.startsWith('tco_')).forEach(k=>localStorage.removeItem(k)); } catch(e) {}
+    window.location.href='/login.html';
+    return;
+  }
   if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&!appInitialized){
     appInitialized=true;
     initApp(session);
