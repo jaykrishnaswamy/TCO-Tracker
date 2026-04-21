@@ -94,6 +94,42 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
 .garage-pill.active{background:var(--text-primary);color:var(--bg-primary);border-color:var(--text-primary);font-weight:500}
 .garage-pill:hover:not(.active){background:var(--bg-secondary)}
 
+/* ── Premium hero card ── */
+.tco-hero{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(135deg,#1A1F28 0%,#0E1116 100%);
+  color:#E8E9EB;margin-bottom:14px;min-height:190px;
+  padding:16px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.tco-hero-bg{position:absolute;inset:0;opacity:0.85;pointer-events:none}
+.tco-hero-bg img{width:100%;height:100%;object-fit:cover;object-position:center 55%;opacity:0.55}
+.tco-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,17,22,0.95) 0%,rgba(14,17,22,0.4) 50%,rgba(14,17,22,0.1) 100%);pointer-events:none}
+.tco-hero-content{position:relative;z-index:1}
+.tco-hero-top{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
+.tco-hero-top .dot{width:6px;height:6px;border-radius:50%}
+.tco-hero-hero{margin-top:auto}
+.tco-hero-label{font-size:11px;color:#9CA3AF;margin-bottom:3px}
+.tco-hero-num{display:flex;align-items:baseline;gap:8px}
+.tco-hero-num .big{font-size:30px;font-weight:500;letter-spacing:-0.02em;line-height:1;color:#E8E9EB}
+.tco-hero-num .delta{font-size:12px}
+.tco-hero-num .delta.up{color:#F0997B}
+.tco-hero-num .delta.down{color:#6EE7A0}
+.tco-hero-meta{margin-top:6px;font-size:11px;color:#6B7280;font-family:ui-monospace,SFMono-Regular,monospace;letter-spacing:0.02em}
+
+/* Daily fact card */
+.tco-fact-card{
+  background:var(--bg-primary);border:0.5px solid var(--border-tertiary);
+  border-left:3px solid #BA7517;border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+  padding:12px 14px;margin-bottom:14px;
+}
+@media(prefers-color-scheme:dark){
+  .tco-fact-card{background:#151A22;border-color:#1F252F;border-left-color:#BA7517}
+}
+.tco-fact-card-title{display:flex;align-items:center;gap:6px;font-size:11px;color:#BA7517;font-weight:500;letter-spacing:0.04em;margin-bottom:4px}
+@media(prefers-color-scheme:dark){.tco-fact-card-title{color:#EF9F27}}
+.tco-fact-card-body{font-size:13px;line-height:1.5;color:var(--text-primary)}
+@media(prefers-color-scheme:dark){.tco-fact-card-body{color:#D1D5DB}}
+
 /* ── Mobile responsive ── */
 @media(max-width:600px){
   body{padding:1rem 0.75rem;padding-bottom:80px}
@@ -184,6 +220,32 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
 <!-- Car hero image -->
 <div id="car-hero" style="margin:12px 0 1.25rem;border-radius:var(--radius-lg);overflow:hidden;height:180px;background:var(--bg-secondary);display:none">
   <img id="car-hero-img" src="" alt="Vehicle" style="width:100%;height:100%;object-fit:cover;object-position:center 60%">
+</div>
+
+<!-- Premium hero card -->
+<div id="tco-hero" class="tco-hero" style="display:none">
+  <div class="tco-hero-bg"><img id="tco-hero-img" src="" alt=""></div>
+  <div class="tco-hero-overlay"></div>
+  <div class="tco-hero-content" style="display:flex;flex-direction:column;height:100%;min-height:160px;justify-content:space-between">
+    <div class="tco-hero-top" id="tco-hero-status"></div>
+    <div class="tco-hero-hero">
+      <div class="tco-hero-label" id="tco-hero-label">This year so far</div>
+      <div class="tco-hero-num">
+        <div class="big" id="tco-hero-amount">$0</div>
+        <div class="delta" id="tco-hero-delta"></div>
+      </div>
+      <div class="tco-hero-meta" id="tco-hero-meta"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Daily fact card -->
+<div id="tco-fact-card" class="tco-fact-card" style="display:none">
+  <div class="tco-fact-card-title">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+    <span id="tco-fact-card-title">Did you know?</span>
+  </div>
+  <div class="tco-fact-card-body" id="tco-fact-card-body"></div>
 </div>
 
 <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="garage-switcher"></div>
@@ -528,7 +590,7 @@ function showTab(t){
     const tb=document.getElementById('tab-'+p);if(tb)tb.classList.toggle('active',p===t);
     const bn=document.getElementById('bnav-'+p);if(bn)bn.classList.toggle('active',p===t);
   });
-  if(t==='dashboard')renderDashboard();
+  if(t==='dashboard'){renderPremiumHero();renderDailyFact();renderDashboard();}
   if(t==='alerts'){renderIntervalSettings();renderAlerts();}
   window.scrollTo(0,0);
 }
@@ -770,6 +832,93 @@ function saveSetup(){
   updateHeader();saveState();renderAlerts();renderGarage();
   const prev=document.getElementById('retag-date-preview');if(prev)prev.textContent=state.vehicle.pdate||'your purchase date';
   showTab('dashboard');
+}
+
+/* ── Premium hero + daily fact renderer ── */
+function hashDay(str){
+  // Simple deterministic hash → picks same fact per day per user
+  let h=0;for(let i=0;i<str.length;i++){h=((h<<5)-h+str.charCodeAt(i))|0;}
+  return Math.abs(h);
+}
+
+function renderDailyFact(){
+  const card=document.getElementById('tco-fact-card');
+  if(!card)return;
+  const make=(cv().vehicle.make||'').toLowerCase().trim();
+  const pool=(typeof VEHICLE_FACTS!=='undefined'&&VEHICLE_FACTS[make])?VEHICLE_FACTS[make]:(typeof VEHICLE_FACTS!=='undefined'?VEHICLE_FACTS.default:null);
+  if(!pool||!pool.length){card.style.display='none';return;}
+  const today=new Date().toISOString().slice(0,10);
+  const seed=hashDay(today+'|'+(currentVid||''));
+  const fact=pool[seed%pool.length];
+  document.getElementById('tco-fact-card-title').textContent=fact.title;
+  document.getElementById('tco-fact-card-body').textContent=fact.body;
+  card.style.display='block';
+}
+
+function renderPremiumHero(){
+  const heroEl=document.getElementById('tco-hero');
+  if(!heroEl)return;
+  const v=cv().vehicle;
+  if(!v||!(v.year||v.make||v.model)){heroEl.style.display='none';return;}
+  heroEl.style.display='flex';
+
+  // Photo or hide the bg
+  const imgEl=document.getElementById('tco-hero-img');
+  if(v.photo){imgEl.src=v.photo;imgEl.style.display='block';}
+  else{imgEl.style.display='none';}
+
+  // Status pill (most-urgent alert, if any)
+  const statusEl=document.getElementById('tco-hero-status');
+  const alertInfo=getMostUrgentAlert();
+  if(alertInfo){
+    const color=alertInfo.level==='overdue'?'#E24B4A':'#F0997B';
+    statusEl.innerHTML=`<span class="dot" style="background:${color}"></span><span style="color:${color}">${alertInfo.text}</span>`;
+  } else {
+    statusEl.innerHTML='<span class="dot" style="background:#6EE7A0"></span><span style="color:#6EE7A0">All service up to date</span>';
+  }
+
+  // This year total (your ownership only; matches current dashboard ethos)
+  const year=new Date().getFullYear();
+  const inYear=e=>!e.prior&&e.date&&e.date.startsWith(String(year));
+  const thisYear=[...cv().fuel.filter(inYear),...cv().maintenance.filter(inYear),...cv().fixed.filter(inYear)].reduce((s,e)=>s+e.cost,0);
+  document.getElementById('tco-hero-amount').textContent=fmt(thisYear).replace(/\.00$/,'');
+
+  // Year-over-year delta
+  const lastYear=String(year-1);
+  const inLastYear=e=>!e.prior&&e.date&&e.date.startsWith(lastYear);
+  const lastYearTotal=[...cv().fuel.filter(inLastYear),...cv().maintenance.filter(inLastYear),...cv().fixed.filter(inLastYear)].reduce((s,e)=>s+e.cost,0);
+  const deltaEl=document.getElementById('tco-hero-delta');
+  if(lastYearTotal>0&&thisYear>0){
+    const pct=Math.round(((thisYear-lastYearTotal)/lastYearTotal)*100);
+    deltaEl.textContent=(pct>=0?'+':'')+pct+'% vs last year';
+    deltaEl.className='delta '+(pct<0?'down':'up');
+  } else {
+    deltaEl.textContent='';
+  }
+
+  // Meta line
+  const odo=v.codo?Number(v.codo).toLocaleString()+' mi':'';
+  document.getElementById('tco-hero-meta').textContent=odo;
+}
+
+function getMostUrgentAlert(){
+  try{
+    const intervals=getIntervals();
+    const currentOdo=cv().vehicle.codo||0;
+    if(!currentOdo)return null;
+    const today=new Date();
+    let worst=null;
+    Object.entries(intervals).forEach(([type,interval])=>{
+      const last=getLastService(type);
+      if(interval.miles&&currentOdo){
+        const lastOdo=last?(last.odo||0):(cv().vehicle.podo||0);
+        const pct=(currentOdo-lastOdo)/interval.miles;
+        if(pct>=1&&(!worst||worst.pct<pct))worst={text:interval.label.split(' (')[0]+' overdue',level:'overdue',pct};
+        else if(pct>=0.85&&(!worst||worst.level==='ok'))worst={text:interval.label.split(' (')[0]+' due soon',level:'due-soon',pct};
+      }
+    });
+    return worst;
+  }catch(e){return null;}
 }
 
 function updateHeader(){
@@ -1676,7 +1825,7 @@ async function initApp(session){
   fetchUsage();
 
   renderGarage();
-  updateHeader();updateMetrics();renderFuel();renderMaint();renderFixed();renderAlerts();renderConsumables();
+  updateHeader();renderPremiumHero();renderDailyFact();updateMetrics();renderFuel();renderMaint();renderFixed();renderAlerts();renderConsumables();
   restoreSetupForm();
 }
 
