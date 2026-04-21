@@ -584,6 +584,16 @@ const state = stateProxy;
 function fmt(n){return'$'+Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtN(n,d=1){return Number(n).toFixed(d);}
 
+/* Safe date comparator: missing dates sort oldest; newest-first by default */
+function cmpDateDesc(a,b){
+  const da=a.date||'0000-00-00', db=b.date||'0000-00-00';
+  if(da<db)return 1; if(da>db)return -1; return 0;
+}
+function cmpDateAsc(a,b){
+  const da=a.date||'0000-00-00', db=b.date||'0000-00-00';
+  if(da<db)return -1; if(da>db)return 1; return 0;
+}
+
 function showTab(t){
   ['dashboard','fuel','maintenance','fixed','alerts','consumables','import','setup'].forEach(p=>{
     document.getElementById('pane-'+p).style.display=p===t?'block':'none';
@@ -953,7 +963,7 @@ function addFuel(){
   } else {
     state.fuel.push({id:Date.now(),...entry});
   }
-  state.fuel.sort((a,b)=>a.date.localeCompare(b.date));
+  state.fuel.sort(cmpDateAsc);
   ['f-date','f-odo','f-gal','f-ppg','f-cost','f-merchant','f-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-prior').checked=false;
   saveState();renderFuel();updateMetrics();
@@ -968,7 +978,7 @@ function addMaint(){
   } else {
     state.maintenance.push({id:Date.now(),...entry});
   }
-  state.maintenance.sort((a,b)=>a.date.localeCompare(b.date));
+  state.maintenance.sort(cmpDateAsc);
   ['mn-date','mn-odo','mn-cost','mn-merchant','mn-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('mn-prior').checked=false;
   document.getElementById('mn-repair').checked=false;
@@ -984,7 +994,7 @@ function addFixed(){
   } else {
     state.fixed.push({id:Date.now(),...entry});
   }
-  state.fixed.sort((a,b)=>a.date.localeCompare(b.date));
+  state.fixed.sort(cmpDateAsc);
   ['fx-date','fx-cost','fx-merchant','fx-note'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fx-prior').checked=false;
   saveState();renderFixed();updateMetrics();
@@ -1077,8 +1087,8 @@ function actionBtns(arr,id){
 function renderFuel(){
   const el=document.getElementById('fuel-list');
   if(!state.fuel.length){el.innerHTML='<div class="empty">No fill-ups logged yet.</div>';return;}
-  const currentF=[...state.fuel].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
-  const priorF=[...state.fuel].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const currentF=[...state.fuel].filter(e=>!e.prior).sort(cmpDateDesc);
+  const priorF=[...state.fuel].filter(e=>e.prior).sort(cmpDateDesc);
   const sorted=[...currentF,...priorF];
   const dividerIdx=priorF.length>0?currentF.length:-1;
   const rows=sorted.map((e,i)=>{
@@ -1095,8 +1105,8 @@ function renderFuel(){
 function renderMaint(){
   const el=document.getElementById('maint-list');
   if(!state.maintenance.length){el.innerHTML='<div class="empty">No maintenance logged yet.</div>';return;}
-  const current=[...state.maintenance].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
-  const prior=[...state.maintenance].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const current=[...state.maintenance].filter(e=>!e.prior).sort(cmpDateDesc);
+  const prior=[...state.maintenance].filter(e=>e.prior).sort(cmpDateDesc);
   const sorted=[...current,...prior];
   const dividerIdx=prior.length>0?current.length:-1;
   const rows=sorted.map((e,i)=>{
@@ -1114,8 +1124,8 @@ function renderMaint(){
 function renderFixed(){
   const el=document.getElementById('fixed-list');
   if(!state.fixed.length){el.innerHTML='<div class="empty">No fixed costs logged yet.</div>';return;}
-  const currentFx=[...state.fixed].filter(e=>!e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
-  const priorFx=[...state.fixed].filter(e=>e.prior).sort((a,b)=>b.date?.localeCompare(a.date));
+  const currentFx=[...state.fixed].filter(e=>!e.prior).sort(cmpDateDesc);
+  const priorFx=[...state.fixed].filter(e=>e.prior).sort(cmpDateDesc);
   const sorted=[...currentFx,...priorFx];
   const dividerIdx=priorFx.length>0?currentFx.length:-1;
   const rows=sorted.map((e,i)=>{
@@ -1173,7 +1183,7 @@ function renderDashboard(){
   lb.id='chart-legend';lb.style.cssText='display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:12px;color:var(--text-secondary)';
   [['#378ADD','Fuel',ft],['#1D9E75','Maintenance',mt],['#D85A30','Fixed',fxt]].forEach(([c,l,v])=>{lb.innerHTML+=`<span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:${c}"></span>${l} ${fmt(v)}</span>`;});
   document.getElementById('costChart').parentNode.after(lb);
-  const allEntries=[...state.fuel.map(e=>({...e,cat:'fuel'})),...state.maintenance.map(e=>({...e,cat:'maint'})),...state.fixed.map(e=>({...e,cat:'fixed'}))].sort((a,b)=>b.date?.localeCompare(a.date));
+  const allEntries=[...state.fuel.map(e=>({...e,cat:'fuel'})),...state.maintenance.map(e=>({...e,cat:'maint'})),...state.fixed.map(e=>({...e,cat:'fixed'}))].sort(cmpDateDesc);
   const current=allEntries.filter(e=>!e.prior).slice(0,8);
   const rl=document.getElementById('recent-list');
   if(!current.length){rl.innerHTML='<div class="empty">No entries yet.</div>';return;}
@@ -1329,7 +1339,7 @@ Return format:
     importResults.push(r);
   });
 
-  state.maintenance.sort((a,b)=>a.date.localeCompare(b.date));
+  state.maintenance.sort(cmpDateAsc);
   saveState(); renderMaint(); updateMetrics(); renderAlerts();
 
   statusText.textContent = `Done — ${saved} entries saved${failed>0?', '+failed+' could not be read':''}`;
@@ -1390,7 +1400,7 @@ function addConsumable(){
   } else {
     cv().consumables.push(entry);
   }
-  cv().consumables.sort((a,b)=>a.date.localeCompare(b.date));
+  cv().consumables.sort(cmpDateAsc);
   ['cs-date','cs-cost','cs-note','cs-merchant'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('cs-prior').checked=false;
   saveState(); renderConsumables(); updateMetrics();
@@ -1472,7 +1482,7 @@ function renderIntervalSettings(){
 
 function getLastService(type){
   // Find most recent maintenance entry matching this type
-  const matches=state.maintenance.filter(e=>e.type===type).sort((a,b)=>b.date.localeCompare(a.date));
+  const matches=state.maintenance.filter(e=>e.type===type).sort(cmpDateDesc);
   return matches[0]||null;
 }
 
