@@ -78,6 +78,18 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
 .spinner{width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .from-receipt{background:var(--bg-success) !important;border-color:var(--text-success) !important;transition:background 1.5s ease}
+
+/* Delight moment — scan success animation */
+@keyframes tco-check-pop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2);opacity:1}85%{transform:scale(0.92)}100%{transform:scale(1);opacity:1}}
+@keyframes tco-ribbon-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.tco-check-icon{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--text-success);color:#fff;flex-shrink:0;animation:tco-check-pop 500ms cubic-bezier(0.34,1.56,0.64,1)}
+.tco-check-icon svg{width:11px;height:11px;stroke:currentColor;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tco-fact-ribbon{margin:10px 0 14px;padding:10px 14px;background:var(--bg-warning);border-left:3px solid var(--text-warning);border-radius:0 var(--radius-md) var(--radius-md) 0;font-size:12px;line-height:1.5;color:var(--text-warning);animation:tco-ribbon-in 500ms ease-out;opacity:1}
+.tco-fact-ribbon-title{font-weight:500;margin-bottom:2px;color:var(--text-warning);display:flex;align-items:center;gap:6px}
+.tco-fact-ribbon-body{color:var(--text-warning);opacity:0.9}
+@media(prefers-reduced-motion:reduce){
+  .tco-check-icon,.tco-fact-ribbon,.from-receipt{animation:none !important;transition:none !important}
+}
 .garage-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;border:0.5px solid var(--border-secondary);background:transparent;cursor:pointer;color:var(--text-secondary)}
 .garage-pill.active{background:var(--text-primary);color:var(--bg-primary);border-color:var(--text-primary);font-weight:500}
 .garage-pill:hover:not(.active){background:var(--bg-secondary)}
@@ -527,7 +539,106 @@ function handleDragLeave(zoneId){document.getElementById(zoneId).classList.remov
 function handleDrop(e,section){e.preventDefault();handleDragLeave(section+'-drop');const f=e.dataTransfer.files[0];if(f)processReceiptFile(f,section);}
 function handleFileSelect(e,section){const f=e.target.files[0];if(f)processReceiptFile(f,section);e.target.value='';}
 
+/* ── Delight moment: facts registry + orchestrator ── */
+const VEHICLE_FACTS = {
+  bmw: [
+    {title:"BMW trivia",body:"The F22 chassis (2014–2021 2-series) was among the last BMWs with hydraulic steering assist — a detail enthusiasts still seek out."},
+    {title:"Did you know?",body:"BMW recommends CBS (Condition-Based Service) for most maintenance — your car literally tells you when it's due."},
+    {title:"Fun fact",body:"N20 engines (228i) were the first BMW 4-cylinders with Valvetronic, Double-VANOS, and a twin-scroll turbo all together."},
+    {title:"Ownership tip",body:"Independent BMW specialists often save 30–50% vs dealer rates on routine service — with the same OEM parts."},
+  ],
+  subaru: [
+    {title:"Subaru trivia",body:"The horizontally-opposed 'boxer' engine has been in continuous Subaru production since 1966 — one of the longest runs in auto history."},
+    {title:"Did you know?",body:"Subaru's symmetrical AWD is always on — there's no button to turn it off, because it's never off."},
+    {title:"Ownership tip",body:"CVT fluid changes aren't in the official schedule, but many specialists recommend one around 60k mi to extend transmission life."},
+  ],
+  toyota: [
+    {title:"Toyota trivia",body:"Toyota's hybrid system has logged over 25 million vehicles globally since 1997 — more than any other automaker combined."},
+    {title:"Ownership tip",body:"Toyota engines famously don't need early attention — but brake fluid, coolant, and transmission fluid still benefit from interval service."},
+  ],
+  honda: [
+    {title:"Honda trivia",body:"Honda's VTEC wasn't just marketing — it genuinely widens the usable power band by switching cam profiles mid-rev."},
+    {title:"Ownership tip",body:"Honda CVTs prefer fresh fluid every 30–40k mi even when the manual suggests longer. It's cheap insurance."},
+  ],
+  default: [
+    {title:"Ownership tip",body:"Keeping a digital service history like this can add 5–10% to resale value — documented cars sell faster and for more."},
+    {title:"Did you know?",body:"The average American spends about $1,200/yr on vehicle maintenance. Tracking it is the first step to spending less."},
+    {title:"Fun fact",body:"The word 'sedan' comes from 17th-century covered chairs carried by servants — not the most flattering origin for your daily driver."},
+  ],
+};
+
+function pickVehicleFact(){
+  try {
+    const make = (cv().vehicle.make || '').toLowerCase().trim();
+    const pool = VEHICLE_FACTS[make] || VEHICLE_FACTS.default;
+    return pool[Math.floor(Math.random() * pool.length)];
+  } catch(e) { return null; }
+}
+
+// Tracks pending delight timers per section so we can cancel on nav/unmount
+const delightTimers = {fuel:[], maint:[], fixed:[]};
+
+function cancelDelight(section){
+  (delightTimers[section] || []).forEach(t => clearTimeout(t));
+  delightTimers[section] = [];
+  const ribbon = document.getElementById(section + '-fact-ribbon');
+  if (ribbon) ribbon.remove();
+}
+
+function showDelight(section){
+  cancelDelight(section);
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const statusEl = document.getElementById(section + '-scan-status');
+  const msgEl = document.getElementById(section + '-scan-msg');
+  if (!statusEl || !msgEl) return;
+
+  // Replace spinner with animated checkmark
+  const spinner = statusEl.querySelector('.spinner');
+  if (spinner) {
+    const check = document.createElement('span');
+    check.className = 'tco-check-icon';
+    check.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    spinner.replaceWith(check);
+  }
+  msgEl.textContent = 'Scanned — review and save';
+
+  // Haptic feedback (Android Chrome only; iOS silently no-ops — flagged for React Native phase)
+  if (navigator.vibrate) { try { navigator.vibrate(25); } catch(e){} }
+
+  // Insert fact ribbon after the status bar
+  const fact = pickVehicleFact();
+  if (fact && !reduced) {
+    const ribbon = document.createElement('div');
+    ribbon.className = 'tco-fact-ribbon';
+    ribbon.id = section + '-fact-ribbon';
+    const title = document.createElement('div');
+    title.className = 'tco-fact-ribbon-title';
+    title.textContent = fact.title;
+    const body = document.createElement('div');
+    body.className = 'tco-fact-ribbon-body';
+    body.textContent = fact.body;  // textContent = XSS-safe
+    ribbon.appendChild(title);
+    ribbon.appendChild(body);
+    statusEl.insertAdjacentElement('afterend', ribbon);
+
+    // Auto-dismiss after 8 seconds
+    delightTimers[section].push(setTimeout(() => {
+      if (ribbon.parentNode) {
+        ribbon.style.transition = 'opacity 400ms ease';
+        ribbon.style.opacity = '0';
+        delightTimers[section].push(setTimeout(() => ribbon.remove(), 450));
+      }
+    }, 8000));
+  }
+
+  // Fade status banner after 5s (shorter than before; ribbon carries the moment)
+  delightTimers[section].push(setTimeout(() => {
+    if (statusEl) statusEl.className = 'scan-status';
+  }, 5000));
+}
+
 async function processReceiptFile(file,section){
+  cancelDelight(section);  // clear any previous run's timers + ribbon
   const statusEl=document.getElementById(section+'-scan-status');
   const msgEl=document.getElementById(section+'-scan-msg');
   statusEl.className='scan-status scanning';
@@ -584,11 +695,22 @@ CRITICAL RULES:
     const data=await resp.json();
     const raw=data.content.map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(raw);
-    fillFields(section,parsed);
-
     statusEl.className='scan-status success';
-    msgEl.textContent='Receipt scanned — highlighted fields auto-filled. Review and save.';
-    setTimeout(()=>{statusEl.className='scan-status';},7000);
+    // Cascade field reveals — ~110ms stagger for the "reading it in front of you" feel
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) {
+      fillFields(section, parsed);
+    } else {
+      const keys = Object.keys(parsed);
+      keys.forEach((k, i) => {
+        delightTimers[section].push(setTimeout(() => {
+          fillFields(section, { [k]: parsed[k] });
+        }, i * 110));
+      });
+    }
+    // Trigger the delight moment after cascade completes
+    const cascadeMs = reduced ? 0 : Object.keys(parsed).length * 110;
+    delightTimers[section].push(setTimeout(() => showDelight(section), cascadeMs + 50));
   }catch(err){
     console.error(err);
     statusEl.className='scan-status error';
