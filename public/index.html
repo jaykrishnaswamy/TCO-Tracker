@@ -247,9 +247,9 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
       <button id="maint-cancel-btn" class="btn" style="display:none;font-size:12px;padding:4px 10px" onclick="cancelEdit('maintenance')">Cancel edit</button>
     </div>
     <div class="receipt-zone" id="maint-drop" onclick="document.getElementById('maint-file').click()" ondragover="handleDragOver(event,'maint-drop')" ondragleave="handleDragLeave('maint-drop')" ondrop="handleDrop(event,'maint')">
-      <input type="file" id="maint-file" accept="image/*,application/pdf" onchange="handleFileSelect(event,'maint')">
+      <input type="file" id="maint-file" accept="image/*,application/pdf" capture="environment" onchange="handleFileSelect(event,'maint')">
       <span class="rz-icon">🧾</span>
-      <div class="rz-text"><strong>Upload a receipt to auto-fill</strong> — or drag &amp; drop<br><span style="font-size:11px">Photo, screenshot, or PDF of a service invoice</span></div>
+      <div class="rz-text"><strong>Snap or upload a service receipt</strong> — fields fill automatically<br><span style="font-size:11px">Tap to open camera · or drag &amp; drop a photo/PDF</span></div>
     </div>
     <div class="scan-status" id="maint-scan-status"><span class="spinner"></span><span id="maint-scan-msg">Reading receipt...</span></div>
     <div id="maint-recommendations" style="display:none;background:var(--bg-warning);border-radius:var(--radius-md);padding:10px 14px;margin-bottom:14px;border:0.5px solid #d97706"></div>
@@ -288,9 +288,9 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
       <button id="fixed-cancel-btn" class="btn" style="display:none;font-size:12px;padding:4px 10px" onclick="cancelEdit('fixed')">Cancel edit</button>
     </div>
     <div class="receipt-zone" id="fixed-drop" onclick="document.getElementById('fixed-file').click()" ondragover="handleDragOver(event,'fixed-drop')" ondragleave="handleDragLeave('fixed-drop')" ondrop="handleDrop(event,'fixed')">
-      <input type="file" id="fixed-file" accept="image/*,application/pdf" onchange="handleFileSelect(event,'fixed')">
+      <input type="file" id="fixed-file" accept="image/*,application/pdf" capture="environment" onchange="handleFileSelect(event,'fixed')">
       <span class="rz-icon">🧾</span>
-      <div class="rz-text"><strong>Upload a receipt to auto-fill</strong> — or drag &amp; drop<br><span style="font-size:11px">Insurance bill, DMV notice, parking receipt, etc.</span></div>
+      <div class="rz-text"><strong>Snap or upload a bill</strong> — fields fill automatically<br><span style="font-size:11px">Tap to open camera · insurance, DMV, parking, etc.</span></div>
     </div>
     <div class="scan-status" id="fixed-scan-status"><span class="spinner"></span><span id="fixed-scan-msg">Reading receipt...</span></div>
     <div class="field-row">
