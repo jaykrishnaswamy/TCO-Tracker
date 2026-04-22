@@ -505,6 +505,11 @@ header{display:flex;align-items:baseline;justify-content:space-between;margin-bo
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Re-evaluate all existing entries against your purchase date. Anything before <strong id="retag-date-preview">your purchase date</strong> will be marked as prior ownership.</p>
     <button class="btn" onclick="retagAllEntries()" style="font-size:12px">Re-tag all entries by purchase date</button>
   </div>
+  <div style="margin-top:1rem;padding-top:1rem;border-top:0.5px solid var(--border-tertiary)">
+    <div style="font-size:13px;font-weight:500;margin-bottom:4px">Backup your data</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px">Download a complete copy of every vehicle and entry as a JSON file. Keep it somewhere safe — you can restore from it if anything ever goes wrong.</p>
+    <button class="btn" onclick="exportAllData()" style="font-size:12px">Download backup (JSON)</button>
+  </div>
   <button class="btn primary" onclick="saveSetup()" style="margin-top:1rem">Save vehicle info</button>
 </div>
 
@@ -1838,6 +1843,37 @@ function saveIntervals(){
   renderAlerts();
   const btn=document.querySelector('#pane-alerts .btn.primary');
   if(btn){const orig=btn.textContent;btn.textContent='Saved!';setTimeout(()=>btn.textContent=orig,1500);}
+}
+
+// ── Export all data as JSON (backup) ──
+function exportAllData(){
+  try {
+    const payload = {
+      exported_at: new Date().toISOString(),
+      app_version: 'tco-tracker-v1',
+      user_email: (currentSession?.user?.email || 'unknown'),
+      garage: garage,
+    };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+    a.href = url;
+    a.download = 'tco-tracker-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    // Quick visual confirmation
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Downloaded';
+    setTimeout(() => btn.textContent = orig, 2000);
+  } catch(e) {
+    alert('Backup failed: ' + e.message);
+    console.error('Export error:', e);
+  }
 }
 
 // ── App initialization with Supabase auth ──
