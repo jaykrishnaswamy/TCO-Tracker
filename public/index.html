@@ -1652,11 +1652,29 @@ function setUserAvatar(user){
   el.title='Signed in as '+user.email+' (click to sign out)';
 }
 
+// Sync mutex — prevents racing /api/sync calls from corrupting data.
+// Each sync does DELETE + INSERT, so two concurrent syncs can double-insert.
+let _syncInFlight = false;
+let _syncPending = false;
+
 function saveState(){
   // Also persist to localStorage as cache for faster loads
   try{localStorage.setItem('tco_garage_cache',JSON.stringify({garage,currentVid}));}catch(e){}
-  // Sync to Supabase in background
-  syncToSupabase().catch(e=>console.warn('Sync error:',e));
+  // Schedule a sync; if one is already running, queue a single follow-up.
+  scheduleSync();
+}
+
+async function scheduleSync(){
+  if(_syncInFlight){ _syncPending = true; return; }
+  _syncInFlight = true;
+  try {
+    await syncToSupabase();
+  } catch(e) {
+    console.warn('Sync error:', e);
+  } finally {
+    _syncInFlight = false;
+    if(_syncPending){ _syncPending = false; scheduleSync(); }
+  }
 }
 
 async function syncToSupabase(){
